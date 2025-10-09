@@ -114,7 +114,7 @@ class BleakClientP4Android(BaseBleakClient):
             logger.debug(f"Connecting to BLE device @ {self.address}")
 
             # Add delay before connection attempt to ensure clean state
-            await asyncio.sleep(0.2)
+            # await asyncio.sleep(0.2)
 
             (self.__gatt,) = await self.__callbacks.perform_and_wait(
                 dispatchApi=self.__device.connectGatt,
@@ -132,7 +132,7 @@ class BleakClientP4Android(BaseBleakClient):
             logger.debug("Connection successful.")
 
             # Add stability delay after connection
-            await asyncio.sleep(0.3)
+            # await asyncio.sleep(0.3)
 
             # unlike other backends, Android doesn't automatically negotiate
             # the MTU, so we request the largest size possible like BlueZ
@@ -148,7 +148,7 @@ class BleakClientP4Android(BaseBleakClient):
                 self.__mtu = 23
 
             # Add delay after MTU negotiation
-            await asyncio.sleep(0.2)
+            # await asyncio.sleep(0.2)
 
             logger.debug("discovering services...")
             await self.__callbacks.perform_and_wait(
@@ -158,12 +158,12 @@ class BleakClientP4Android(BaseBleakClient):
             )
 
             # Add delay after service discovery
-            await asyncio.sleep(0.2)
+            # await asyncio.sleep(0.2)
 
             await self._get_services()
 
             # Final stability delay
-            await asyncio.sleep(0.1)
+            # await asyncio.sleep(0.1)
             logger.debug("Connection stabilized")
 
         except BaseException as e:
@@ -185,9 +185,9 @@ class BleakClientP4Android(BaseBleakClient):
         if self.__gatt is not None:
             try:
                 self.__gatt.disconnect()
-                await asyncio.sleep(0.1)
+                # await asyncio.sleep(0.1)
                 self.__gatt.close()
-                await asyncio.sleep(0.1)
+                # await asyncio.sleep(0.1)
             except Exception as e:
                 logger.warning(f"Error during force disconnect: {e}")
 
@@ -222,7 +222,7 @@ class BleakClientP4Android(BaseBleakClient):
                         )
 
             # Add delay before disconnection
-            await asyncio.sleep(0.1)
+            # await asyncio.sleep(0.1)
 
             # Try to disconnect gracefully
             try:
@@ -236,21 +236,21 @@ class BleakClientP4Android(BaseBleakClient):
                 )
 
                 # Add delay after disconnect
-                await asyncio.sleep(0.2)
+                # await asyncio.sleep(0.2)
 
                 self.__gatt.close()
 
                 # Add delay after close
-                await asyncio.sleep(0.2)
+                # await asyncio.sleep(0.2)
 
             except Exception as e:
                 logger.error(f"Graceful disconnect failed: {e}")
                 # Force cleanup
                 try:
                     self.__gatt.disconnect()
-                    await asyncio.sleep(0.1)
+                    # await asyncio.sleep(0.1)
                     self.__gatt.close()
-                    await asyncio.sleep(0.1)
+                    # await asyncio.sleep(0.1)
                 except Exception:
                     pass
 
@@ -398,7 +398,7 @@ class BleakClientP4Android(BaseBleakClient):
         if not self.is_connected:
             raise BleakError("Device not connected")
 
-        await asyncio.sleep(delay)
+        # await asyncio.sleep(delay)
 
         # Double check connection
         if not self.is_connected:
@@ -441,7 +441,7 @@ class BleakClientP4Android(BaseBleakClient):
                         2 ** (attempt - 1)
                     )  # Exponential backoff
                     logger.debug(f"Waiting {wait_time:.2f}s before retry...")
-                    await asyncio.sleep(wait_time)
+                    # await asyncio.sleep(wait_time)
 
                 (value,) = await self.__callbacks.perform_and_wait(
                     dispatchApi=self.__gatt.readCharacteristic,
@@ -504,7 +504,7 @@ class BleakClientP4Android(BaseBleakClient):
 
                 if attempt > 0:
                     wait_time = retry_delay * (2 ** (attempt - 1))
-                    await asyncio.sleep(wait_time)
+                    # await asyncio.sleep(wait_time)
 
                 (value,) = await self.__callbacks.perform_and_wait(
                     dispatchApi=self.__gatt.readDescriptor,
@@ -631,7 +631,7 @@ class BleakClientP4Android(BaseBleakClient):
 
                 if attempt > 0:
                     wait_time = retry_delay * attempt
-                    await asyncio.sleep(wait_time)
+                    # await asyncio.sleep(wait_time)
 
                 if not self.__gatt.setCharacteristicNotification(
                     characteristic.obj, True
@@ -643,7 +643,7 @@ class BleakClientP4Android(BaseBleakClient):
                 logger.debug("setCharacteristicNotification successful")
 
                 # Do not overwhelm the backend
-                await asyncio.sleep(0.1)
+                # await asyncio.sleep(0.1)
 
                 # Write CCCD descriptor
                 cccd = characteristic.get_descriptor("2902")
@@ -659,7 +659,7 @@ class BleakClientP4Android(BaseBleakClient):
                 )
 
                 # Allow time for notification setup
-                await asyncio.sleep(0.1)
+                # await asyncio.sleep(0.1)
 
                 # Register callback
                 self._subscriptions[characteristic.handle] = callback
