@@ -364,15 +364,6 @@ class BleakClientP4Android(BaseBleakClient):
         self.services = services
         return self.services
 
-    async def _ensure_connection_stable(self, delay: float = 0.1) -> None:
-        """Ensure connection is stable before operations"""
-        if not self.is_connected:
-            raise BleakError("Device not connected")
-
-        # Double check connection
-        if not self.is_connected:
-            raise BleakError("Connection lost during stability check")
-
     # IO methods
 
     @override
@@ -397,9 +388,6 @@ class BleakClientP4Android(BaseBleakClient):
 
         for attempt in range(max_retries):
             try:
-                # Ensure connection is stable before reading
-                await self._ensure_connection_stable()
-
                 logger.debug(
                     f"Reading characteristic {characteristic.uuid}, attempt {attempt + 1}"
                 )
@@ -462,8 +450,6 @@ class BleakClientP4Android(BaseBleakClient):
 
         for attempt in range(max_retries):
             try:
-                await self._ensure_connection_stable()
-
                 logger.debug(
                     f"Reading descriptor {descriptor.uuid}, attempt {attempt + 1}"
                 )
@@ -504,9 +490,6 @@ class BleakClientP4Android(BaseBleakClient):
     async def write_gatt_char(
         self, characteristic: BleakGATTCharacteristic, data: bytearray, response: bool
     ) -> None:
-        # Ensure connection is stable before write
-        await self._ensure_connection_stable(0.05)
-
         if response:
             characteristic.obj.setWriteType(
                 defs.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
@@ -551,9 +534,6 @@ class BleakClientP4Android(BaseBleakClient):
         if not descriptor:
             raise BleakError(f"Descriptor {desc_specifier} was not found!")
 
-        # Ensure connection is stable before write
-        await self._ensure_connection_stable(0.05)
-
         descriptor.obj.setValue(data)
 
         await self.__callbacks.perform_and_wait(
@@ -589,8 +569,6 @@ class BleakClientP4Android(BaseBleakClient):
 
         for attempt in range(max_retries):
             try:
-                await self._ensure_connection_stable(0.1)
-
                 logger.debug(
                     f"Enabling notifications for {characteristic.uuid}, attempt {attempt + 1}"
                 )
