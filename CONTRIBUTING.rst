@@ -86,13 +86,18 @@ and your favorite text editor. And Python of course.
     $ poetry run flake8
     $ poetry run pytest
 
-6. Commit your changes and push your branch to GitHub::
+6. Additionally, you can run integration tests by adding the ``--bleak-hci-transport`` argument to ``pytest``.
+For more information, see `tests/integration/README.rst <tests/integration/README.rst>`_.
+
+  $ poetry run pytest --bleak-hci-transport=serial:/dev/tty.usbmodem1101
+
+7. Commit your changes and push your branch to GitHub::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+8. Submit a pull request through the GitHub website.
 
 Pull Request Guidelines
 -----------------------
@@ -102,10 +107,10 @@ Before you submit a pull request, check that it meets these guidelines:
 1. If the pull request adds functionality, the docs should be updated.
 2. Modify the ``CHANGELOG.rst``, describing your changes as is specified by the
    guidelines in that document.
-3. The pull request should work for Python 3.9+ on the following platforms:
+3. The pull request should work for Python 3.10+ on the following platforms:
     - Windows 10, version 16299 (Fall Creators Update) and greater
     - Linux distributions with BlueZ >= 5.55
-    - OS X / macOS >= 10.13
+    - OS X / macOS >= 10.15
 4. Squash all your commits on your PR branch, if the commits are not solving
    different problems and you are committing them in the same PR. In that case,
    consider making several PRs instead.

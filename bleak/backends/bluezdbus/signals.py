@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import sys
@@ -193,7 +192,6 @@ async def add_match(bus: MessageBus, rules: MatchRules) -> Message:
             body=[str(rules)],
         )
     )
-    assert reply
 
     return reply
 
@@ -210,6 +208,5 @@ async def remove_match(bus: MessageBus, rules: MatchRules) -> Message:
             body=[str(rules)],
         )
     )
-    assert reply
 
     return reply

@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Top-level package for bleak."""
 
 from __future__ import annotations
+
+from bleak.args import SizedBuffer
 
 __author__ = """Henrik Blidh"""
 __email__ = "henrik.blidh@gmail.com"
@@ -18,11 +18,6 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from types import TracebackType
 from typing import Any, Literal, Optional, TypedDict, Union, cast, overload
 
-if sys.version_info < (3, 12):
-    from typing_extensions import Buffer
-else:
-    from collections.abc import Buffer
-
 if sys.version_info < (3, 11):
     from async_timeout import timeout as async_timeout
     from typing_extensions import Never, Self, Unpack, assert_never
@@ -33,6 +28,7 @@ else:
 from bleak.args.bluez import BlueZScannerArgs
 from bleak.args.corebluetooth import CBScannerArgs, CBStartNotifyArgs
 from bleak.args.winrt import WinRTClientArgs
+from bleak.backends import BleakBackend
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.descriptor import BleakGATTDescriptor
@@ -123,8 +119,10 @@ class BleakScanner:
         backend: Optional[type[BaseBleakScanner]] = None,
         **kwargs: Any,
     ) -> None:
-        PlatformBleakScanner = (
-            get_platform_scanner_backend_type() if backend is None else backend
+        PlatformBleakScanner, backend_id = (
+            get_platform_scanner_backend_type()
+            if backend is None
+            else (backend, backend.__name__)
         )
 
         self._backend = PlatformBleakScanner(
@@ -135,6 +133,19 @@ class BleakScanner:
             cb=cb,
             **kwargs,
         )  # type: ignore
+        self._backend_id = backend_id
+
+    @property
+    def backend_id(self) -> BleakBackend | str:
+        """
+        Gets the identifier of the backend in use.
+
+        The value is one of the :class:`BleakBackend` enum values in case of
+        built-in backends, or a string identifying a custom backend.
+
+        .. versionadded:: 2.0
+        """
+        return self._backend_id
 
     async def __aenter__(self) -> Self:
         await self._backend.start()
@@ -149,7 +160,17 @@ class BleakScanner:
         await self._backend.stop()
 
     async def start(self) -> None:
-        """Start scanning for devices"""
+        """
+        Start scanning for devices.
+
+        Raises:
+            BleakBluetoothNotAvailableError:
+                if Bluetooth is not currently available
+
+        .. versionchanged:: 2.0
+            Now raises :class:`BleakBluetoothNotAvailableError` instead of :class:`BleakError`
+            when Bluetooth is not currently available.
+        """
         await self._backend.start()
 
     async def stop(self) -> None:
@@ -211,6 +232,10 @@ class BleakScanner:
         """
         Used to override the automatically selected backend (i.e. for a
             custom backend).
+        """
+        adapter: str | None
+        """
+        Name of adapter to use (BlueZ specific), e.g. hci0.
         """
 
     @overload
@@ -490,8 +515,10 @@ class BleakClient:
         backend: Optional[type[BaseBleakClient]] = None,
         **kwargs: Any,
     ) -> None:
-        PlatformBleakClient = (
-            get_platform_client_backend_type() if backend is None else backend
+        PlatformBleakClient, backend_id = (
+            get_platform_client_backend_type()
+            if backend is None
+            else (backend, backend.__name__)
         )
 
         self._backend = PlatformBleakClient(
@@ -509,6 +536,19 @@ class BleakClient:
             **kwargs,
         )
         self._pair_before_connect = pair
+        self._backend_id = backend_id
+
+    @property
+    def backend_id(self) -> BleakBackend | str:
+        """
+        Gets the identifier of the backend in use.
+
+        The value is one of the :class:`BleakBackend` enum values in case of
+        built-in backends, or a string identifying a custom backend.
+
+        .. versionadded:: 2.0
+        """
+        return self._backend_id
 
     # device info
 
@@ -523,6 +563,8 @@ class BleakClient:
         a Bluetooth address separated with dashes (``-``) instead of colons
         (``:``) (or a UUID on Apple devices). It may also be possible to override
         the device name using the OS's Bluetooth settings.
+
+        .. versionadded:: 1.1
         """
         return self._backend.name
 
@@ -673,7 +715,7 @@ class BleakClient:
     async def write_gatt_char(
         self,
         char_specifier: Union[BleakGATTCharacteristic, int, str, uuid.UUID],
-        data: Buffer,
+        data: SizedBuffer,
         response: Optional[bool] = None,
     ) -> None:
         r"""
@@ -794,7 +836,7 @@ class BleakClient:
                 task.add_done_callback(_background_tasks.discard)
 
         else:
-            wrapped_callback = functools.partial(callback, characteristic)
+            wrapped_callback = functools.partial(callback, characteristic)  # type: ignore
 
         await self._backend.start_notify(
             characteristic, wrapped_callback, cb=cb, **kwargs
@@ -851,7 +893,7 @@ class BleakClient:
     async def write_gatt_descriptor(
         self,
         desc_specifier: Union[BleakGATTDescriptor, int],
-        data: Buffer,
+        data: SizedBuffer,
     ) -> None:
         """
         Perform a write operation on the specified GATT descriptor.

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # bleak documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul  9 22:26:36 2013.
@@ -16,7 +15,12 @@
 import os
 import pathlib
 import sys
-import tomllib
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    # tell type checkers to ignore this file if using Python 3.10
+    assert False
 
 PROJECT_ROOT_DIR = pathlib.Path(__file__).parent.parent.resolve()
 
@@ -123,6 +127,8 @@ autodoc_mock_imports = [
     "objc",
     "ctypes",
     "typing_extensions",
+    "bleak.backends.corebluetooth.CentralManagerDelegate",
+    "bleak.backends.corebluetooth.PeripheralDelegate",
 ]
 
 # -- Options for HTML output -------------------------------------------
